@@ -1,4 +1,4 @@
-https://github.com/fall3nangel/Auth_sprint_6
+https://github.com/fall3nangel/Auth_sprint_1
 
 # Проектная работа 6 спринта
 
