@@ -1,0 +1,149 @@
+openapi: 3.0.0
+info:
+  title: Auth API
+  version: v1
+
+security:
+  - bearerAuth: []
+paths:
+  /registration/:
+    post:
+      description: ""
+      security: []
+      parameters:
+        - in: header
+          name: username
+          required: true
+          schema:
+            type: string
+            description: The user's username.
+            pattern: ^example-[0-9a-z]+$
+        - in: header
+          name: password
+          required: true
+          schema:
+            type: string
+            description: The user's password.
+      responses:
+        "201":
+          description: "User was created"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User was created"
+
+        "400":
+          description: "User already exists"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User already exists"
+  /login:
+   post:
+      description: ""
+      security: []
+      parameters:
+        - in: header
+          name: username
+          required: true
+          schema:
+            type: string
+            description: The user's username.
+        - in: header
+          name: password
+          required: true
+          schema:
+            type: string
+            description: The user's password.
+      responses:
+        "200":
+          description: "Succesful user login"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Succesful user login"
+                  access_token:
+                    type: string
+                    example: "Access token"
+                  refresh_token:
+                    type: string
+                    example: "Refresh token"
+  /profile:
+    get:
+      description: ''
+      parameters: 
+        - in: header
+          name: username
+          required: true
+          schema:
+            type: string
+            description: The user's username.
+      responses:
+        '200':
+          description: OK
+    patch:
+      description: 'Изменение логина или пароля'
+      security:
+        - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: OK
+  /refresh:
+    post:
+      description: ''
+      security:
+        - bearerAuth_refresh: []
+      parameters: []
+      responses:
+        '200':
+          description: OK 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Succesfully  user login"
+                  access_token:
+                    type: string
+                    example: "New access token"
+  /logout:
+    post:
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: OK
+  /history:
+    get:
+      description: 'получение пользователем своей истории входов в аккаунт'
+      parameters: []
+      responses:
+        '200':
+          description: OK
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    bearerAuth_refresh:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
