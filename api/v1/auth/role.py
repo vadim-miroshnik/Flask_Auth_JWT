@@ -1,13 +1,14 @@
 import http
 import uuid
 
+from api import is_admin_permissions
+from db import db
+from flask_jwt_extended import jwt_required
+from flask_restful import Resource, reqparse
+from models.role import Role, RoleRights, UserRoles
+from models.user import User
 from pydantic import BaseModel, Field
 from pydantic.schema import Optional
-
-from db import db
-from flask_restful import Resource, reqparse
-from models.user import User
-from models.role import Role, RoleRights, UserRoles
 
 
 class Right(BaseModel):
@@ -25,7 +26,9 @@ class RoleCRUD(Resource):
     parser = reqparse.RequestParser()
 
     parser.add_argument("role", type=str, help="Input role name", required=False)
-    parser.add_argument("rights", type=dict, required=False, action="append", default=[])
+    parser.add_argument(
+        "rights", type=dict, required=False, action="append", default=[]
+    )
     parser.add_argument("deleted", type=bool, required=False, default=False)
 
     def post(self):
@@ -99,10 +102,14 @@ class RoleCRUD(Resource):
         role_object = Role.find_by_name(role)
         if data.get("deleted"):
             if not role_object:
-                return {"message": f"Can't delete: role {role} not found"}, http.HTTPStatus.NOT_FOUND
+                return {
+                    "message": f"Can't delete: role {role} not found"
+                }, http.HTTPStatus.NOT_FOUND
             Role.query.filter(Role.name == role).delete()
             db.session.commit()
-            return {"message": f"Role {role} was successfully deleted"}, http.HTTPStatus.OK
+            return {
+                "message": f"Role {role} was successfully deleted"
+            }, http.HTTPStatus.OK
         if not role_object:
             role_object = Role(name=role)
             db.session.add(role_object)
@@ -113,8 +120,9 @@ class RoleCRUD(Resource):
             deleted = right.pop("deleted", False)
             validated_right = Right.parse_obj(right)
             if deleted:
-                db.session.query(RoleRights).delete() \
-                    .where(RoleRights.role == role and RoleRights.url == validated_right.url)
+                db.session.query(RoleRights).delete().where(
+                    RoleRights.role == role and RoleRights.url == validated_right.url
+                )
                 continue
             right_object = RoleRights.get_by_role_and_url(role, validated_right.url)
             if right_object:
@@ -129,12 +137,15 @@ class RoleCRUD(Resource):
 
 
 class UserRoleCRUD(Resource):
+
     parser = reqparse.RequestParser()
 
     parser.add_argument("user_id", type=uuid.UUID, help="Input user_id", required=False)
     parser.add_argument("email", type=str, help="Input user email", required=False)
     parser.add_argument("roles", type=dict, required=False, action="append")
 
+    @jwt_required()
+    @is_admin_permissions()
     def post(self):
         """
         User role CRUD method
@@ -205,22 +216,33 @@ class UserRoleCRUD(Resource):
         user_id = data.get("user_id")
         if not user_id:
             if not data.get("email"):
-                return {"message": "Required one of this fields: user_id or email"}, http.HTTPStatus.BAD_REQUEST
+                return {
+                    "message": "Required one of this fields: user_id or email"
+                }, http.HTTPStatus.BAD_REQUEST
             user_id = User.find_by_email(data.get("email")).id
         user = User.query.get(user_id)
         if not user:
-            return {"message": f"User id {user_id} not found"}, http.HTTPStatus.NOT_FOUND
+            return {
+                "message": f"User id {user_id} not found"
+            }, http.HTTPStatus.NOT_FOUND
         if not data.get("roles"):
             user_roles = UserRoles.get_user_roles_detailed(user_id)
-            return {"message": f"User id {user_id} roles and rights", "roles": user_roles}, http.HTTPStatus.OK
+            return {
+                "message": f"User id {user_id} roles and rights",
+                "roles": user_roles,
+            }, http.HTTPStatus.OK
         for role in data.get("roles"):
             validated_role = EditRole.parse_obj(role)
             role_object = Role.query.get(validated_role.role)
             if not role_object:
-                return {"message": f"Role {validated_role.role} is not exists"}, http.HTTPStatus.NOT_FOUND
+                return {
+                    "message": f"Role {validated_role.role} is not exists"
+                }, http.HTTPStatus.NOT_FOUND
             if validated_role.deleted:
-                db.session.query(UserRoles) \
-                    .delete().where(UserRoles.user_id == user_id and UserRoles.role == validated_role.role)
+                db.session.query(UserRoles).delete().where(
+                    UserRoles.user_id == user_id
+                    and UserRoles.role == validated_role.role
+                )
             else:
                 if UserRoles.is_exists_user_role(user_id, validated_role.role):
                     continue
@@ -229,6 +251,6 @@ class UserRoleCRUD(Resource):
         db.session.commit()
         response = UserRoles.get_user_roles_detailed(user_id)
         return {
-                   "message": f"User roles for user id {user_id} are successfully updated",
-                   "result": response,
-               }, http.HTTPStatus.CREATED
+            "message": f"User roles for user id {user_id} are successfully updated",
+            "result": response,
+        }, http.HTTPStatus.CREATED

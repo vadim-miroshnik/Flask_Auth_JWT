@@ -2,13 +2,15 @@ import http
 
 from db import db
 from flask_restful import Resource, reqparse
+from models.role import BaseRoles, UserRoles
 from models.user import User
-from models.role import UserRoles, BaseRoles
 
 
 class UserRegistration(Resource):
     parser = reqparse.RequestParser()
-    parser.add_argument("email", type=str, help="This field cannot be blank", required=True, trim=True)
+    parser.add_argument(
+        "email", type=str, help="This field cannot be blank", required=True, trim=True
+    )
     parser.add_argument("password", help="This field cannot be blank", required=True)
 
     def post(self):
