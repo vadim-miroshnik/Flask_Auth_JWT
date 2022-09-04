@@ -1,10 +1,11 @@
 import http
 
-from app import ma
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_restful import Resource
 from marshmallow import fields
 from models.history import History
+
+from ... import ma
 
 
 class HistorySchema(ma.SQLAlchemyAutoSchema):
@@ -24,7 +25,13 @@ class LoginHistory(Resource):
     def get(self) -> tuple[dict[str, str], int]:
         """
         Return list of user's login history
+        tags:
+          - user
         """
         user_id: str = get_jwt_identity()
-        history = History.query.filter_by(user_id=user_id)
-        return {"history": history_schema.dump(history)}, http.HTTPStatus.OK
+        page = 1
+        per_page = 10
+        history = History.query.filter_by(user_id=user_id).paginate(
+            page, per_page, error_out=False
+        )
+        return {"history": history_schema.dump(history.items)}, http.HTTPStatus.OK

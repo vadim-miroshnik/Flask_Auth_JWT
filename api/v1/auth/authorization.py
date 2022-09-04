@@ -1,6 +1,7 @@
 import http
 
-from flask_jwt_extended import get_jwt_identity, jwt_required, verify_jwt_in_request
+from flask_jwt_extended import (get_jwt_identity, jwt_required,
+                                verify_jwt_in_request)
 from flask_restful import Resource, reqparse
 from models.role import UserRoles
 
@@ -32,7 +33,7 @@ class Authorization(Resource):
                   type: string
                   description: Response message
         """
-        verify_jwt_in_request(optional=True, locations='headers')
+        verify_jwt_in_request(optional=True, locations="headers")
         user_id: str = get_jwt_identity()
         return UserRoles.get_user_roles_detailed(user_id=user_id), http.HTTPStatus.OK
 
@@ -109,8 +110,15 @@ class Authorization(Resource):
 
         for role in roles:
             for right in role.get("rights"):
-                if url.startswith(right.get("url")) and param_name == right.get("param_name"):
-                    return {"authorization": "passed", param_name: right.get("param_value")}, http.HTTPStatus.OK
+                if url.startswith(right.get("url")) and param_name == right.get(
+                    "param_name"
+                ):
+                    return {
+                        "authorization": "passed",
+                        param_name: right.get("param_value"),
+                    }, http.HTTPStatus.OK
 
-        return {"authorization": "failed", "description": "insufficient privileges"}, http.HTTPStatus.NOT_FOUND
-
+        return {
+            "authorization": "failed",
+            "description": "insufficient privileges",
+        }, http.HTTPStatus.NOT_FOUND

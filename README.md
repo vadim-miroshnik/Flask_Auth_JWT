@@ -1,5 +1,31 @@
 https://github.com/fall3nangel/Auth_sprint_1
 
+### Как запустить проект 
+
+**Склонируйте проект:**
+```commandline
+https://github.com/fall3nangel/Auth_sprint_1
+```
+
+**Для запуска проекта следует скопировать файл .env.example и переименовать на .env**
+```commandline
+cp .env .env.example
+cp db.env db.env.example
+```
+
+**Запустить проект с помощью Docker**
+```commandline
+docker-compose -f docker-compose.yml build
+docker-compose -f docker-compose.yml up
+```
+
+**Для создания суперпользователя**
+```commandline
+flask create_admin admin1 password1
+```
+
+**После запуска проекта, у вас будет доступ к [документации проекта](http://localhost:5000/apidocs/)**
+
 # Проектная работа 6 спринта
 
 С этого модуля вы больше не будете получать чётко расписанное ТЗ, а задания для каждого спринта вы найдёте внутри уроков. Перед тем как начать программировать, вам предстоит продумать архитектуру решения, декомпозировать задачи и распределить их между командой.

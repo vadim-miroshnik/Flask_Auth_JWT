@@ -1,18 +1,18 @@
 import enum
 
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import func, Index
-
 from db import db
+from sqlalchemy import Index, func
+from sqlalchemy.dialects.postgresql import UUID
+
 from .mixins import IdCreatedUpdatedMixin
 
 
 class BaseRoles(enum.Enum):
-    superuser = 'superuser'
-    admin = 'admin'
-    regular = 'regular'
-    subscriber = 'subscriber'
-    guest = 'guest'
+    superuser = "superuser"
+    admin = "admin"
+    regular = "regular"
+    subscriber = "subscriber"
+    guest = "guest"
 
 
 class Role(db.Model):
@@ -32,9 +32,11 @@ class Role(db.Model):
             "param_name",
             RoleRights.param_name,
             "param_value",
-            RoleRights.param_value
+            RoleRights.param_value,
         )
-        rights = func.coalesce(func.json_agg(right, distinct=True).filter(RoleRights.role != None), "[]")
+        rights = func.coalesce(
+            func.json_agg(right, distinct=True).filter(RoleRights.role != None), "[]"
+        )
         role_detailed = (
             db.session.query(Role.name, rights)
             .outerjoin(RoleRights, Role.name == RoleRights.role)
@@ -52,11 +54,15 @@ class Role(db.Model):
             "param_name",
             RoleRights.param_name,
             "param_value",
-            RoleRights.param_value
+            RoleRights.param_value,
         )
-        rights = func.coalesce(func.json_agg(right, distinct=True).filter(RoleRights.role != None), "[]")
+        rights = func.coalesce(
+            func.json_agg(right, distinct=True).filter(RoleRights.role != None), "[]"
+        )
         queryset = (
-            db.session.query(cls.name, rights).outerjoin(RoleRights, Role.name == RoleRights.role).group_by(cls.name)
+            db.session.query(cls.name, rights)
+            .outerjoin(RoleRights, Role.name == RoleRights.role)
+            .group_by(cls.name)
         )
         results = []
         for role in queryset:
@@ -68,7 +74,11 @@ class RoleRights(IdCreatedUpdatedMixin):
     __tablename__ = "roles_rights"
     __table_args__ = {"schema": "auth"}
 
-    role = db.Column(db.String(length=64), db.ForeignKey("auth.roles.name", ondelete="CASCADE"), nullable=False)
+    role = db.Column(
+        db.String(length=64),
+        db.ForeignKey("auth.roles.name", ondelete="CASCADE"),
+        nullable=False,
+    )
     url = db.Column(db.Text, nullable=False)
     param_name = db.Column(db.String(length=128))
     param_value = db.Column(db.String(length=128))
@@ -82,8 +92,16 @@ class UserRoles(IdCreatedUpdatedMixin):
     __tablename__ = "users_roles"
     __table_args__ = {"schema": "auth"}
 
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("auth.users.id", ondelete="CASCADE"), nullable=True)
-    role = db.Column(db.String(length=64), db.ForeignKey("auth.roles.name", ondelete="CASCADE"), nullable=False)
+    user_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("auth.users.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    role = db.Column(
+        db.String(length=64),
+        db.ForeignKey("auth.roles.name", ondelete="CASCADE"),
+        nullable=False,
+    )
 
     @classmethod
     def is_exists_user_role(cls, user_id, role):
@@ -104,9 +122,11 @@ class UserRoles(IdCreatedUpdatedMixin):
             "param_name",
             RoleRights.param_name,
             "param_value",
-            RoleRights.param_value
+            RoleRights.param_value,
         )
-        rights = func.coalesce(func.json_agg(right, distinct=True).filter(RoleRights.role != None), "[]")
+        rights = func.coalesce(
+            func.json_agg(right, distinct=True).filter(RoleRights.role != None), "[]"
+        )
         queryset = (
             db.session.query(cls.role, rights)
             .outerjoin(RoleRights, cls.role == RoleRights.role)
